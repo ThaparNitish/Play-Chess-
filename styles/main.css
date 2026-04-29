@@ -33,5 +33,23 @@ body{
 }
 
 .piece{
-    width: 100%
+    width: 100%;
+}
+
+.piece:hover{
+  cursor: grab;
+}
+
+.highlight{
+  background-color: #C9CAB2;
+  height: 30px;
+  width: 30px;
+  display: block;
+  margin:auto;
+  margin-top: 20px;
+  border-radius: 50%;
+}
+
+.highlightYellow{
+  background-color: #F5F682;
 }

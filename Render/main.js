@@ -1,6 +1,15 @@
 import * as piece from "../data/pieces.js"
+import { RootDiv, globalState } from "../Helper/constants.js";
 
-const RootDiv = document.getElementById("root")
+function selfHighlight(piece){
+    document.getElementById(piece.curr_position).classList.add("highlightYellow");
+}
+
+function clearPreviousHighlight(piece){
+    if(piece){
+        document.getElementById(piece.curr_position).classList.remove("highlightYellow");
+    }
+}
 
 function pieceRender(data){
     data.forEach(row => {
@@ -74,4 +83,23 @@ function initGameRender(data){
   pieceRender(data)
 }
 
-export{initGameRender}
+// render highlight circle
+function renderHighlight(squareId){
+    const highlightspan = document.createElement("span")
+    highlightspan.classList.add("highlight")
+    document.getElementById(squareId).appendChild(highlightspan)
+}
+
+// clear all highlights from the board
+function clearHighlight(){
+    const flatData = globalState.flat();
+
+    flatData.forEach((el) => {
+        if(el.highlighted){
+            document.getElementById(el.id).innerHTML = "";
+        el.highlighted = false;
+        }
+    })
+}
+
+export{initGameRender, renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight}
