@@ -1,10 +1,38 @@
 import * as piece from "../data/pieces.js"
 import { RootDiv, globalState } from "../Helper/constants.js";
 
+
+function moveElement(piece, id){
+    const flatData = globalState.flat()
+
+    flatData.forEach(el => {
+        if(el.id == piece.curr_position){
+            el.piece = null;
+        }
+
+        if(el.id == id){
+            el.piece = piece;
+        }
+    });
+
+    clearHighlight();
+
+    const previousPiece = document.getElementById(piece.curr_position)
+    const currentPiece = document.getElementById(id);
+
+    currentPiece.innerHTML = previousPiece.innerHTML
+    previousPiece.innerHTML = ""
+    previousPiece.classList.remove("highlightYellow")
+
+    piece.curr_position = id;
+}
+
+// highlight the clicked  piece
 function selfHighlight(piece){
     document.getElementById(piece.curr_position).classList.add("highlightYellow");
 }
 
+// dehighlight the previously clicked piece
 function clearPreviousHighlight(piece){
     if(piece){
         document.getElementById(piece.curr_position).classList.remove("highlightYellow");
@@ -102,4 +130,4 @@ function clearHighlight(){
     })
 }
 
-export{initGameRender, renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight}
+export{initGameRender, renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight, moveElement}
