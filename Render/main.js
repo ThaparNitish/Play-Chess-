@@ -120,14 +120,11 @@ function renderHighlight(squareId){
 
 // clear all highlights from the board
 function clearHighlight(){
-    const flatData = globalState.flat();
+    const spans = document.querySelectorAll(".highlight");
+    spans.forEach(span => span.remove());
 
-    flatData.forEach((el) => {
-        if(el.highlighted){
-            document.getElementById(el.id).innerHTML = "";
-        el.highlighted = false;
-        }
-    })
+    const captures = document.querySelectorAll(".capture");
+    captures.forEach(el => el.classList.remove("capture"));
 }
 
 export{initGameRender, renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight, moveElement}

@@ -1,5 +1,6 @@
 import { RootDiv, globalState } from "../Helper/constants.js";
 import { renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight, moveElement } from "../Render/main.js";
+import { checkPieceOfOpponenentOnElement } from "../Helper/commonHelper.js";
 
 // highlight or not => state
 let highlight_state = false
@@ -51,20 +52,40 @@ function whitePawnclick({piece}){
         })
     }
     else{
-        const highlightSquareId = [`${curr_position[0]}${Number(curr_position[1]) + 1}`];
+
+        
+        const col1 = `${String.fromCharCode(curr_position[0].charCodeAt(0) - 1)}${Number(curr_position[1]) + 1}`;
+        const col2 = `${String.fromCharCode(curr_position[0].charCodeAt(0) + 1)}${Number(curr_position[1]) + 1}`
+
+        // ids available to move
+        const forwardId = `${curr_position[0]}${Number(curr_position[1]) + 1}`;
+
+        const highlightSquareId = [
+            { id: forwardId, type: "move" }
+        ];
+
+        const captureIds  = [col1, col2]
+        captureIds.forEach((el) => {
+            if(checkPieceOfOpponenentOnElement(el, "White") == "capture"){
+                highlightSquareId.push({id: el, type: "capture"});
+            }
+        })
+
+        
 
         clearHighlight()
 
-        highlightSquareId.forEach((highlight) => {
-            globalState.forEach((row) => {
-                row.forEach((el) => {
-                    if(el.id == highlight){
-                        el.highlight(true)
-                    }
-                })
-            })
-            
-        })
+        highlightSquareId.forEach(({ id, type })=>{
+            const squareEl = document.getElementById(id);
+
+            if(type === "move"){
+                renderHighlight(id);
+            }
+
+            if(type === "capture"){
+                squareEl.classList.add("capture");
+            }
+        });
     }
 }
 
