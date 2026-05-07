@@ -1,6 +1,6 @@
 import { RootDiv, globalState } from "../Helper/constants.js";
 import { renderHighlight, clearHighlight, moveElement, MakeSquareYellow, removeYellowSquare, whichPieceExist } from "../Render/main.js";
-import { checkPieceOfOpponenentOnElement } from "../Helper/commonHelper.js";
+import { checkPieceOfOpponenentOnElement, getSquare } from "../Helper/commonHelper.js";
 
 // highlight or not => state
 let highlight_state = false
@@ -11,117 +11,12 @@ let selfHighlightState = null
 // in move state or not
 let moveState = null;
 
-const MoveableSquares = [];
-const CaptureableSquares = [];
+
+const PossibleMoves = []
 
 let CurrentHighlighted = null;
 let SelectedPiece = null;
 
-
-function WhitePawnClicked(squareid){
-
-    // clear old highlights + moves
-    clearHighlight();
-
-    MoveableSquares.length = 0;
-    CaptureableSquares.length = 0;
-
-    const file = squareid[0];
-    const rank = Number(squareid[1]);
-
-    // forward moves
-    const oneStep = `${file}${rank + 1}`;
-    const twoStep = `${file}${rank + 2}`;
-
-    // capture moves
-    const leftCapture =
-        `${String.fromCharCode(file.charCodeAt(0) - 1)}${rank + 1}`;
-
-    const rightCapture =
-        `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank + 1}`;
-
-    if (!whichPieceExist(oneStep)) {
-        console.log("nothing at the next square")
-        MoveableSquares.push(oneStep);
-
-        // initial double move
-        if (rank === 2 && !whichPieceExist(twoStep)) {
-            console.log("can move 2 squares")
-            MoveableSquares.push(twoStep);
-        }
-    }
-
-    [leftCapture, rightCapture].forEach(el => {
-
-        const piece = whichPieceExist(el);
-
-        if (piece && piece.color === "Black") {
-            CaptureableSquares.push(el);
-        }
-    });
-
-    console.log(MoveableSquares)
-
-    MoveableSquares.forEach(el => {
-        renderHighlight(el, "move");
-    });
-
-    CaptureableSquares.forEach(el => {
-        renderHighlight(el, "capture");
-    });
-}
-
-function BlackPawnClicked(squareid){
-
-    // clear old highlights + moves
-    clearHighlight();
-
-    MoveableSquares.length = 0;
-    CaptureableSquares.length = 0;
-
-    const file = squareid[0];
-    const rank = Number(squareid[1]);
-
-    // forward moves
-    const oneStep = `${file}${rank - 1}`;
-    const twoStep = `${file}${rank - 2}`;
-
-    // capture moves
-    const leftCapture =
-        `${String.fromCharCode(file.charCodeAt(0) - 1)}${rank - 1}`;
-
-    const rightCapture =
-        `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank - 1}`;
-
-    if (!whichPieceExist(oneStep)) {
-
-        MoveableSquares.push(oneStep);
-
-        // initial double move
-        if (rank === 7 && !whichPieceExist(twoStep)) {
-            MoveableSquares.push(twoStep);
-        }
-    }
-
-    [leftCapture, rightCapture].forEach(el => {
-
-        const piece = whichPieceExist(el);
-
-        if (piece && piece.color == "White") {
-            CaptureableSquares.push(el);
-        }
-    });
-
-    console.log(MoveableSquares)
-    console.log(CaptureableSquares)
-    MoveableSquares.forEach(el => {
-        renderHighlight(el, "move");
-    });
-
-    CaptureableSquares.forEach(el => {
-        renderHighlight(el, "capture");
-    });
-}
 
 function GeneratePawnMoves(squareid, color){
     const direction = color === "White" ? 1 : -1;
@@ -131,8 +26,8 @@ function GeneratePawnMoves(squareid, color){
     // clear old highlights + moves
     clearHighlight();
 
-    MoveableSquares.length = 0;
-    CaptureableSquares.length = 0;
+
+    PossibleMoves.length = 0;
 
     const file = squareid[0];
     const rank = Number(squareid[1]);
@@ -147,12 +42,11 @@ function GeneratePawnMoves(squareid, color){
         `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank + direction}`;
 
     if (!whichPieceExist(oneStep)) {
-        MoveableSquares.push(oneStep);
+        PossibleMoves.push({id: oneStep, type: "move"});
 
         // initial double move
         if (rank === initialRank && !whichPieceExist(twoStep)) {
-            console.log("can move 2 squares")
-            MoveableSquares.push(twoStep);
+            PossibleMoves.push({id: twoStep, type: "move"});
         }
     }
 
@@ -161,16 +55,12 @@ function GeneratePawnMoves(squareid, color){
         const piece = whichPieceExist(el);
 
         if (piece && piece.color === enemyColor) {
-            CaptureableSquares.push(el);
+            PossibleMoves.push({id: el, type: "capture"});
         }
     });
 
-    MoveableSquares.forEach(el => {
-        renderHighlight(el, "move");
-    });
-
-    CaptureableSquares.forEach(el => {
-        renderHighlight(el, "capture");
+    PossibleMoves.forEach(el => {
+        renderHighlight(el.id, el.type);
     });
 }
 
@@ -180,59 +70,44 @@ function GlobalEvent(){
 
         // available clicks: img, square, pseudo elements like move capture
         const ClickedON = event.target.closest(".square")?.id;
+        if(!ClickedON) return; // just to avoid any exceptions
 
-        if(!ClickedON) return;
+        const clickedPiece = whichPieceExist(ClickedON); // can be null or a piece
 
-        const clickedPiece = whichPieceExist(ClickedON);
-        // piece: captureable 
-        if(CaptureableSquares.includes(ClickedON)){
+        // if a piece is already selected check if the clicked square is one of the possible moves: call moveElement
 
-        const pieceObj = globalState
-            .flat()
-            .find(el => el.id === CurrentHighlighted).piece;
+        if(CurrentHighlighted && PossibleMoves.some(move => move.id === ClickedON)){
+            moveElement(CurrentHighlighted, ClickedON);
 
-        moveElement(pieceObj, ClickedON);
+            clearHighlight();
+            removeYellowSquare(CurrentHighlighted);
+            CurrentHighlighted = null;
+            SelectedPiece = null;
+            PossibleMoves.length = 0;
+            return;
+        }
+        // if the squares are not one of the possible moves and no piece is selected
+        else if (CurrentHighlighted && !clickedPiece){
+            clearHighlight();
+            removeYellowSquare(CurrentHighlighted);
+            CurrentHighlighted = null;
+            SelectedPiece = null;
+            PossibleMoves.length = 0;
+            return;
+        }
 
-        clearHighlight();
-
-        removeYellowSquare(CurrentHighlighted);
-
-        CurrentHighlighted = null;
-        SelectedPiece = null;
-
-        MoveableSquares.length = 0;
-        CaptureableSquares.length = 0;
-
-        return;
-    }
-
-        // when any piece is clicked
-        if(clickedPiece){
-
-            // same piece clicked twice
-            if(CurrentHighlighted === ClickedON){
-
-                removeYellowSquare(CurrentHighlighted);
-
-                clearHighlight();
-
-                CurrentHighlighted = null;
-                SelectedPiece = null;
-
-                return;
-            }
-
-            // remove old highlight
+        //  we click on a new piece 
+        else if(clickedPiece){
+            // check if any other piece was selected
             if(CurrentHighlighted){
-                removeYellowSquare(CurrentHighlighted);
+                removeYellowSquare(CurrentHighlighted)
+                clearHighlight();
             }
-
-            // select new piece
+            // make the current piece selected
             CurrentHighlighted = ClickedON;
-
             MakeSquareYellow(ClickedON);
-
             SelectedPiece = clickedPiece;
+            PossibleMoves.length = 0;
 
             // white pawn logic
             if(clickedPiece.piece_name === "WhitePawn"){
@@ -242,33 +117,7 @@ function GlobalEvent(){
                 GeneratePawnMoves(ClickedON, "Black")
             }
         }
-
-        // clicked on a empty square
-        else{
-
-            // valid move
-            if(
-                MoveableSquares.includes(ClickedON) ||
-                CaptureableSquares.includes(ClickedON)
-            ){
-
-                const pieceObj = globalState
-                    .flat()
-                    .find(el => el.id === CurrentHighlighted).piece;
-
-                moveElement(pieceObj, ClickedON);
-            }
-
-            clearHighlight();
-
-            removeYellowSquare(CurrentHighlighted);
-
-            CurrentHighlighted = null;
-            SelectedPiece = null;
-
-            MoveableSquares.length = 0;
-            CaptureableSquares.length = 0;
-        }
+        
     });
 }
 

@@ -17,5 +17,9 @@ function checkPieceOfOpponenentOnElement(id, color){
     }
     return null;
 }
+function getSquare(squareid){
+    return globalState.flat().find(el => el.id === squareid);
+}
+
  
-export {checkPieceOfOpponenentOnElement}
+export {checkPieceOfOpponenentOnElement, getSquare}

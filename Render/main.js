@@ -1,31 +1,33 @@
 import * as piece from "../data/pieces.js"
+import { getSquare } from "../Helper/commonHelper.js";
 import { RootDiv, globalState } from "../Helper/constants.js";
 
+// change Game State
+function moveElement(from, to){
+    const fromSquare = getSquare(from);
+    const toSquare = getSquare(to);
 
-function moveElement(piece, id){
-    const flatData = globalState.flat()
+    toSquare.piece = fromSquare.piece;
+    fromSquare.piece = null;
 
-    flatData.forEach(el => {
-        if(el.id == piece.curr_position){
-            el.piece = null;
-        }
+    toSquare.piece.curr_position = to;
+    renderSquare(from);
+    renderSquare(to);
+}
 
-        if(el.id == id){
-            el.piece = piece;
-        }
-    });
+function renderSquare(squareid){
+    const square = getSquare(squareid) // curr in gamestate
+    const squareEl = document.getElementById(squareid) // curr in html
 
-    clearHighlight();
+    // remove the old html
+    squareEl.innerHTML = "";
+    if(square.piece){
+        const img = document.createElement("img")
+        img.src = square.piece.img;
+        img.classList.add("piece")
+        squareEl.appendChild(img)
+    }
 
-    const previousPiece = document.getElementById(piece.curr_position)
-    const currentPiece = document.getElementById(id);
-
-    currentPiece.innerHTML = previousPiece.innerHTML
-    previousPiece.innerHTML = ""
-    removeYellowSquare(piece.curr_position);
-    removeYellowSquare(id);
-
-    piece.curr_position = id;
 }
 
 // highlight the clicked  piece
@@ -137,7 +139,6 @@ function whichPieceExist(squareid){
                 if (!el.piece) {
                     return null;
                 }
-                console.log(el.piece)
                 return el.piece; 
             }
         }
