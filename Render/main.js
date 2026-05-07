@@ -22,20 +22,21 @@ function moveElement(piece, id){
 
     currentPiece.innerHTML = previousPiece.innerHTML
     previousPiece.innerHTML = ""
-    previousPiece.classList.remove("highlightYellow")
+    removeYellowSquare(piece.curr_position);
+    removeYellowSquare(id);
 
     piece.curr_position = id;
 }
 
 // highlight the clicked  piece
-function selfHighlight(piece){
-    document.getElementById(piece.curr_position).classList.add("highlightYellow");
+function MakeSquareYellow(id){
+    document.getElementById(id).classList.add("highlightYellow");
 }
 
 // dehighlight the previously clicked piece
-function clearPreviousHighlight(piece){
-    if(piece){
-        document.getElementById(piece.curr_position).classList.remove("highlightYellow");
+function removeYellowSquare(id){
+    if(id){
+        document.getElementById(id).classList.remove("highlightYellow");
     }
 }
 
@@ -112,19 +113,35 @@ function initGameRender(data){
 }
 
 // render highlight circle
-function renderHighlight(squareId){
-    const highlightspan = document.createElement("span")
-    highlightspan.classList.add("highlight")
-    document.getElementById(squareId).appendChild(highlightspan)
+function renderHighlight(squareId, type){
+    const hightlightsquare = document.getElementById(squareId)
+    hightlightsquare.classList.add(type)
 }
 
 // clear all highlights from the board
 function clearHighlight(){
-    const spans = document.querySelectorAll(".highlight");
-    spans.forEach(span => span.remove());
-
-    const captures = document.querySelectorAll(".capture");
-    captures.forEach(el => el.classList.remove("capture"));
+    const moveSquares = document.querySelectorAll(".move");
+    moveSquares.forEach(el => {
+        el.classList.remove("move");
+    });
+    const captureSquares = document.querySelectorAll(".capture");
+    captureSquares.forEach(el => {
+        el.classList.remove("capture");
+    })
 }
 
-export{initGameRender, renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight, moveElement}
+function whichPieceExist(squareid){
+    for (let row of globalState) {
+        for (let el of row) {
+            if (el.id === squareid) {
+                if (!el.piece) {
+                    return null;
+                }
+                return el.piece.piece_name; 
+            }
+        }
+    }
+    return null
+}
+
+export{initGameRender, renderHighlight, clearHighlight, MakeSquareYellow, removeYellowSquare, moveElement, whichPieceExist}

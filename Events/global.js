@@ -1,5 +1,5 @@
 import { RootDiv, globalState } from "../Helper/constants.js";
-import { renderHighlight, clearHighlight, selfHighlight, clearPreviousHighlight, moveElement } from "../Render/main.js";
+import { renderHighlight, clearHighlight, moveElement, MakeSquareYellow, removeYellowSquare, whichPieceExist } from "../Render/main.js";
 import { checkPieceOfOpponenentOnElement } from "../Helper/commonHelper.js";
 
 // highlight or not => state
@@ -11,180 +11,209 @@ let selfHighlightState = null
 // in move state or not
 let moveState = null;
 
-// White Pawn Event Listner
-function whitePawnclick({piece}){
+const MoveableSquares = [];
+const CaptureableSquares = [];
 
-    // if same piece is clicked on twice
-    if (piece == selfHighlightState){
-        clearPreviousHighlight(selfHighlightState);
-        selfHighlightState = null;
-        clearHighlight();
-        return;
+let CurrentHighlighted = null;
+let SelectedPiece = null;
+
+
+function WhitePawnClicked(squareid){
+
+    // clear old highlights + moves
+    clearHighlight();
+
+    MoveableSquares.length = 0;
+    CaptureableSquares.length = 0;
+
+    const file = squareid[0];
+    const rank = Number(squareid[1]);
+
+    // forward moves
+    const oneStep = `${file}${rank + 1}`;
+    const twoStep = `${file}${rank + 2}`;
+
+    // capture moves
+    const leftCapture =
+        `${String.fromCharCode(file.charCodeAt(0) - 1)}${rank + 1}`;
+
+    const rightCapture =
+        `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank + 1}`;
+
+    if (!whichPieceExist(oneStep)) {
+
+        MoveableSquares.push(oneStep);
+
+        // initial double move
+        if (rank === 2 && !whichPieceExist(twoStep)) {
+            MoveableSquares.push(twoStep);
+        }
     }
 
-    // highlight clicked element
-    clearPreviousHighlight(selfHighlightState)
-    selfHighlight(piece)
-    selfHighlightState = piece
+    [leftCapture, rightCapture].forEach(el => {
 
-    // add piece as move state
-    moveState = piece; 
+        const piece = whichPieceExist(el);
 
-    const curr_position = piece.curr_position;
-    // for initial position
-    if(curr_position[1] == "2"){
-        const highlightSquareId = [
-            `${curr_position[0]}${Number(curr_position[1]) + 1}`,
-            `${curr_position[0]}${Number(curr_position[1]) + 2}`
-        ];
+        if (piece && piece.includes("Black")) {
+            CaptureableSquares.push(el);
+        }
+    });
 
-        clearHighlight()
+    MoveableSquares.forEach(el => {
+        renderHighlight(el, "move");
+    });
 
-        highlightSquareId.forEach((highlight) => {
-            globalState.forEach((row) => {
-                row.forEach((el) => {
-                    if(el.id == highlight){
-                        el.highlight(true)
-                    }
-                })
-            })
-            
-        })
-    }
-    else{
-
-        
-        const col1 = `${String.fromCharCode(curr_position[0].charCodeAt(0) - 1)}${Number(curr_position[1]) + 1}`;
-        const col2 = `${String.fromCharCode(curr_position[0].charCodeAt(0) + 1)}${Number(curr_position[1]) + 1}`
-
-        // ids available to move
-        const forwardId = `${curr_position[0]}${Number(curr_position[1]) + 1}`;
-
-        const highlightSquareId = [
-            { id: forwardId, type: "move" }
-        ];
-
-        const captureIds  = [col1, col2]
-        captureIds.forEach((el) => {
-            if(checkPieceOfOpponenentOnElement(el, "White") == "capture"){
-                highlightSquareId.push({id: el, type: "capture"});
-            }
-        })
-
-        
-
-        clearHighlight()
-
-        highlightSquareId.forEach(({ id, type })=>{
-            const squareEl = document.getElementById(id);
-
-            if(type === "move"){
-                renderHighlight(id);
-            }
-
-            if(type === "capture"){
-                squareEl.classList.add("capture");
-            }
-        });
-    }
+    CaptureableSquares.forEach(el => {
+        renderHighlight(el, "capture");
+    });
 }
 
-// Black Pawn Event Listner
-function BlackPawnclick({piece}){
+function BlackPawnClicked(squareid){
 
-    // if same piece is clicked on twice
-    if (piece == selfHighlightState){
-        clearPreviousHighlight(selfHighlightState);
-        selfHighlightState = null;
-        clearHighlight();
-        return;
+    // clear old highlights + moves
+    clearHighlight();
+
+    MoveableSquares.length = 0;
+    CaptureableSquares.length = 0;
+
+    const file = squareid[0];
+    const rank = Number(squareid[1]);
+
+    // forward moves
+    const oneStep = `${file}${rank - 1}`;
+    const twoStep = `${file}${rank - 2}`;
+
+    // capture moves
+    const leftCapture =
+        `${String.fromCharCode(file.charCodeAt(0) - 1)}${rank - 1}`;
+
+    const rightCapture =
+        `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank - 1}`;
+
+    if (!whichPieceExist(oneStep)) {
+
+        MoveableSquares.push(oneStep);
+
+        // initial double move
+        if (rank === 7 && !whichPieceExist(twoStep)) {
+            MoveableSquares.push(twoStep);
+        }
     }
 
-    // highlight clicked element
-    clearPreviousHighlight(selfHighlightState)
-    selfHighlight(piece)
-    selfHighlightState = piece
+    [leftCapture, rightCapture].forEach(el => {
 
-    // add piece as move state
-    moveState = piece; 
+        const piece = whichPieceExist(el);
 
-    const curr_position = piece.curr_position;
-    // for initial position
-    if(curr_position[1] == "7"){
-        const highlightSquareId = [
-            `${curr_position[0]}${Number(curr_position[1]) - 1}`,
-            `${curr_position[0]}${Number(curr_position[1]) - 2}`
-        ];
+        if (piece && piece.includes("White")) {
+            CaptureableSquares.push(el);
+        }
+    });
 
-        clearHighlight()
+    MoveableSquares.forEach(el => {
+        renderHighlight(el, "move");
+    });
 
-        highlightSquareId.forEach((highlight) => {
-            globalState.forEach((row) => {
-                row.forEach((el) => {
-                    if(el.id == highlight){
-                        el.highlight(true)
-                    }
-                })
-            })
-            
-        })
-    }
-    else{
-        const highlightSquareId = [`${curr_position[0]}${Number(curr_position[1]) - 1}`];
-
-        clearHighlight()
-
-        highlightSquareId.forEach((highlight) => {
-            globalState.forEach((row) => {
-                row.forEach((el) => {
-                    if(el.id == highlight){
-                        el.highlight(true)
-                    }
-                })
-            })
-            
-        })
-    }
+    CaptureableSquares.forEach(el => {
+        renderHighlight(el, "capture");
+    });
 }
 
 function GlobalEvent(){
+
     RootDiv.addEventListener("click", function(event){
-        if(event.target.localName === "img"){
-            const ClickedId = event.target.parentNode.id
-            const flatArray = globalState.flat();
-            const square = flatArray.find(el => el.id == ClickedId)
 
-            if(square.piece.piece_name == "WhitePawn"){
-                whitePawnclick(square);
+        // available clicks: img, square, pseudo elements like move capture
+        const ClickedON = event.target.closest(".square")?.id;
+
+        if(!ClickedON) return;
+
+        const clickedPiece = whichPieceExist(ClickedON);
+        // piece: captureable 
+        if(CaptureableSquares.includes(ClickedON)){
+
+        const pieceObj = globalState
+            .flat()
+            .find(el => el.id === CurrentHighlighted).piece;
+
+        moveElement(pieceObj, ClickedON);
+
+        clearHighlight();
+
+        removeYellowSquare(CurrentHighlighted);
+
+        CurrentHighlighted = null;
+        SelectedPiece = null;
+
+        MoveableSquares.length = 0;
+        CaptureableSquares.length = 0;
+
+        return;
+    }
+
+        // when any piece is clicked
+        if(clickedPiece){
+
+            // same piece clicked twice
+            if(CurrentHighlighted === ClickedON){
+
+                removeYellowSquare(CurrentHighlighted);
+
+                clearHighlight();
+
+                CurrentHighlighted = null;
+                SelectedPiece = null;
+
+                return;
             }
-            else if(square.piece.piece_name == "BlackPawn"){
-                BlackPawnclick(square);
+
+            // remove old highlight
+            if(CurrentHighlighted){
+                removeYellowSquare(CurrentHighlighted);
+            }
+
+            // select new piece
+            CurrentHighlighted = ClickedON;
+
+            MakeSquareYellow(ClickedON);
+
+            SelectedPiece = clickedPiece;
+
+            // white pawn logic
+            if(clickedPiece === "WhitePawn"){
+                WhitePawnClicked(ClickedON);
+            }
+            else if(clickedPiece === "BlackPawn"){
+                BlackPawnClicked(ClickedON)
             }
         }
+
+        // clicked on a empty square
         else{
-            const childElementOfClickedEl = Array.from(event.target.childNodes)
 
-            if(childElementOfClickedEl.length == 1 || event.target.localName == "span"){
-                if(event.target.localName == "span"){
-                    const id = event.target.parentNode.id;
-                    moveElement(moveState, id);
-                    moveState = null;
-                    selfHighlightState = null;
-                }
-                else{
-                    const id = event.target.id
-                    moveElement(moveState, id)
-                    moveState = null;
-                    selfHighlightState = null;
-                }
+            // valid move
+            if(
+                MoveableSquares.includes(ClickedON) ||
+                CaptureableSquares.includes(ClickedON)
+            ){
+
+                const pieceObj = globalState
+                    .flat()
+                    .find(el => el.id === CurrentHighlighted).piece;
+
+                moveElement(pieceObj, ClickedON);
             }
-            else{
-                clearHighlight()
-                clearPreviousHighlight(selfHighlightState)
-                selfHighlightState = null
-            }
+
+            clearHighlight();
+
+            removeYellowSquare(CurrentHighlighted);
+
+            CurrentHighlighted = null;
+            SelectedPiece = null;
+
+            MoveableSquares.length = 0;
+            CaptureableSquares.length = 0;
         }
-    })
+    });
 }
 
-export {GlobalEvent}
+export { GlobalEvent };
