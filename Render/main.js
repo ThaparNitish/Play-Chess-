@@ -132,18 +132,5 @@ function clearHighlight(){
     })
 }
 
-function whichPieceExist(squareid){
-    for (let row of globalState) {
-        for (let el of row) {
-            if (el.id === squareid) {
-                if (!el.piece) {
-                    return null;
-                }
-                return el.piece; 
-            }
-        }
-    }
-    return null
-}
 
-export{initGameRender, renderHighlight, clearHighlight, MakeSquareYellow, removeYellowSquare, moveElement, whichPieceExist}
+export{initGameRender, renderHighlight, clearHighlight, MakeSquareYellow, removeYellowSquare, moveElement}

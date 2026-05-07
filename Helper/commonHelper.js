@@ -1,25 +1,27 @@
 import { globalState } from "./constants.js"
 
-// function to check if piece exits of oppoenent
-function checkPieceOfOpponenentOnElement(id, color){
-    console.log(id, color)
-    const flatArray = globalState.flat()
-    const opponentColor = color === "White" ? "Black" : "White";
 
-    for (let index = 0; index < flatArray.length; index++) {
-        const element = flatArray[index];
-        if(element.id == id){
-            if(element.piece && element.piece.piece_name.includes(opponentColor)){
-                return "capture"
-            }
-            break;
-        }
-    }
-    return null;
-}
 function getSquare(squareid){
     return globalState.flat().find(el => el.id === squareid);
 }
 
+function whichPieceExist(squareid){
+    for (let row of globalState) {
+        for (let el of row) {
+            if (el.id === squareid) {
+                if (!el.piece) {
+                    return null;
+                }
+                return el.piece; 
+            }
+        }
+    }
+    return null
+}
+
+function switchTurn(Curr_Turn){
+    return Curr_Turn === "White" ? "Black" : "White";
+}
+
  
-export {checkPieceOfOpponenentOnElement, getSquare}
+export {getSquare, whichPieceExist, switchTurn}

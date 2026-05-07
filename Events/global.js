@@ -1,21 +1,11 @@
 import { RootDiv, globalState } from "../Helper/constants.js";
-import { renderHighlight, clearHighlight, moveElement, MakeSquareYellow, removeYellowSquare, whichPieceExist } from "../Render/main.js";
-import { checkPieceOfOpponenentOnElement, getSquare } from "../Helper/commonHelper.js";
-
-// highlight or not => state
-let highlight_state = false
-
-// current self highlight square state
-let selfHighlightState = null
-
-// in move state or not
-let moveState = null;
+import { renderHighlight, clearHighlight, moveElement, MakeSquareYellow, removeYellowSquare } from "../Render/main.js";
+import {getSquare, whichPieceExist, switchTurn } from "../Helper/commonHelper.js";
 
 
 const PossibleMoves = []
-
+let CurrentTurn = "White"
 let CurrentHighlighted = null;
-let SelectedPiece = null;
 
 
 function GeneratePawnMoves(squareid, color){
@@ -78,26 +68,32 @@ function GlobalEvent(){
 
         if(CurrentHighlighted && PossibleMoves.some(move => move.id === ClickedON)){
             moveElement(CurrentHighlighted, ClickedON);
+            CurrentTurn = switchTurn(CurrentTurn)
 
             clearHighlight();
             removeYellowSquare(CurrentHighlighted);
             CurrentHighlighted = null;
-            SelectedPiece = null;
             PossibleMoves.length = 0;
             return;
         }
         // if the squares are not one of the possible moves and no piece is selected
-        else if (CurrentHighlighted && !clickedPiece){
+        else if (CurrentHighlighted && (CurrentHighlighted === ClickedON || !clickedPiece)){
             clearHighlight();
             removeYellowSquare(CurrentHighlighted);
             CurrentHighlighted = null;
-            SelectedPiece = null;
             PossibleMoves.length = 0;
             return;
         }
 
         //  we click on a new piece 
-        else if(clickedPiece){
+        if(clickedPiece){
+            if(clickedPiece.color !== CurrentTurn){
+                clearHighlight();
+                removeYellowSquare(CurrentHighlighted);
+                CurrentHighlighted = null;
+                PossibleMoves.length = 0;
+                return;
+            }
             // check if any other piece was selected
             if(CurrentHighlighted){
                 removeYellowSquare(CurrentHighlighted)
@@ -106,7 +102,6 @@ function GlobalEvent(){
             // make the current piece selected
             CurrentHighlighted = ClickedON;
             MakeSquareYellow(ClickedON);
-            SelectedPiece = clickedPiece;
             PossibleMoves.length = 0;
 
             // white pawn logic
@@ -122,3 +117,5 @@ function GlobalEvent(){
 }
 
 export { GlobalEvent };
+
+// removed unneccary variables
