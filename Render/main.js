@@ -137,7 +137,8 @@ function whichPieceExist(squareid){
                 if (!el.piece) {
                     return null;
                 }
-                return el.piece.piece_name; 
+                console.log(el.piece)
+                return el.piece; 
             }
         }
     }

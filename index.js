@@ -5,4 +5,3 @@ import { RootDiv } from "./Helper/constants.js";
 
 initGameRender(globalState);
 GlobalEvent()
-console.log("RootDiv:", RootDiv);

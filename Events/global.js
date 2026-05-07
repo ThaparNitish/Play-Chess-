@@ -41,11 +41,12 @@ function WhitePawnClicked(squareid){
         `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank + 1}`;
 
     if (!whichPieceExist(oneStep)) {
-
+        console.log("nothing at the next square")
         MoveableSquares.push(oneStep);
 
         // initial double move
         if (rank === 2 && !whichPieceExist(twoStep)) {
+            console.log("can move 2 squares")
             MoveableSquares.push(twoStep);
         }
     }
@@ -54,10 +55,12 @@ function WhitePawnClicked(squareid){
 
         const piece = whichPieceExist(el);
 
-        if (piece && piece.includes("Black")) {
+        if (piece && piece.color === "Black") {
             CaptureableSquares.push(el);
         }
     });
+
+    console.log(MoveableSquares)
 
     MoveableSquares.forEach(el => {
         renderHighlight(el, "move");
@@ -104,7 +107,60 @@ function BlackPawnClicked(squareid){
 
         const piece = whichPieceExist(el);
 
-        if (piece && piece.includes("White")) {
+        if (piece && piece.color == "White") {
+            CaptureableSquares.push(el);
+        }
+    });
+
+    console.log(MoveableSquares)
+    console.log(CaptureableSquares)
+    MoveableSquares.forEach(el => {
+        renderHighlight(el, "move");
+    });
+
+    CaptureableSquares.forEach(el => {
+        renderHighlight(el, "capture");
+    });
+}
+
+function GeneratePawnMoves(squareid, color){
+    const direction = color === "White" ? 1 : -1;
+    const initialRank = color === "White" ? 2 : 7
+    const enemyColor = color === "White" ? "Black" : "White"
+
+    // clear old highlights + moves
+    clearHighlight();
+
+    MoveableSquares.length = 0;
+    CaptureableSquares.length = 0;
+
+    const file = squareid[0];
+    const rank = Number(squareid[1]);
+
+    const oneStep = `${file}${rank + direction}`;
+    const twoStep = `${file}${rank + direction + direction}`;
+
+    const leftCapture =
+        `${String.fromCharCode(file.charCodeAt(0) - 1)}${rank + direction}`;
+
+    const rightCapture =
+        `${String.fromCharCode(file.charCodeAt(0) + 1)}${rank + direction}`;
+
+    if (!whichPieceExist(oneStep)) {
+        MoveableSquares.push(oneStep);
+
+        // initial double move
+        if (rank === initialRank && !whichPieceExist(twoStep)) {
+            console.log("can move 2 squares")
+            MoveableSquares.push(twoStep);
+        }
+    }
+
+    [leftCapture, rightCapture].forEach(el => {
+
+        const piece = whichPieceExist(el);
+
+        if (piece && piece.color === enemyColor) {
             CaptureableSquares.push(el);
         }
     });
@@ -179,11 +235,11 @@ function GlobalEvent(){
             SelectedPiece = clickedPiece;
 
             // white pawn logic
-            if(clickedPiece === "WhitePawn"){
-                WhitePawnClicked(ClickedON);
+            if(clickedPiece.piece_name === "WhitePawn"){
+                GeneratePawnMoves(ClickedON, "White");
             }
-            else if(clickedPiece === "BlackPawn"){
-                BlackPawnClicked(ClickedON)
+            else if(clickedPiece.piece_name === "BlackPawn"){
+                GeneratePawnMoves(ClickedON, "Black")
             }
         }
 
