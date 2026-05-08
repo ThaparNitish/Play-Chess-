@@ -162,6 +162,61 @@ function GenerateRookMoves(squareid, color){
     })
 }
 
+function GenerateQueenMoves(squareid, color){
+    clearHighlight();
+    PossibleMoves.length = 0;
+    const enemyColor = color === "White"? "Black" : "White"
+
+    const directions = [
+        [1,0],
+        [0,1],
+        [-1,0],
+        [0,-1],
+        [1,1],
+        [-1,1],  
+        [1,-1],  
+        [-1,-1],
+    ]
+
+    for (const[fileDirection, rankDirection] of directions){
+        let file = squareid[0].charCodeAt(0);
+        let rank = Number(squareid[1])
+
+        while(true){
+            file += fileDirection;
+            rank += rankDirection;
+
+            if(file < "a".charCodeAt(0) || file > "h".charCodeAt(0) || rank < 1 || rank > 8){
+                break;
+            }
+
+            const targetSquare = `${String.fromCharCode(file)}${rank}`;
+            const piece = whichPieceExist(targetSquare);
+            console.log(targetSquare)
+
+            if(piece == null){
+                PossibleMoves.push({
+                    id: targetSquare,
+                    type: "move"
+                })
+                continue;
+            }
+
+            if (piece.color === enemyColor){
+                PossibleMoves.push({
+                    id: targetSquare,
+                    type: "capture"
+                })
+            }
+            break;
+        }    
+    }
+
+    PossibleMoves.forEach(el => {
+        renderHighlight(el.id, el.type)
+    })
+}
+
 function GlobalEvent(){
 
     RootDiv.addEventListener("click", function(event){
@@ -239,6 +294,13 @@ function GlobalEvent(){
             }
             else if (clickedPiece.piece_name === "BlackRook"){
                 GenerateRookMoves(ClickedON, "Black")
+            }
+            else if (clickedPiece.piece_name === "WhiteQueen"){
+                console.log(true)
+                GenerateQueenMoves(ClickedON, "White")
+            }
+            else if(clickedPiece.piece_name === "BlackQueen"){
+                GenerateQueenMoves(ClickedON, "Black")
             }
         }
         
