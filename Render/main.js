@@ -15,6 +15,7 @@ function moveElement(from, to){
     renderSquare(to);
 }
 
+// moves piece from one square to another
 function renderSquare(squareid){
     const square = getSquare(squareid) // curr in gamestate
     const squareEl = document.getElementById(squareid) // curr in html

@@ -1,11 +1,7 @@
 import { renderHighlight } from "../Render/main.js"
 
 function Square(color, id, piece){
-    const highlight = function(){
-        renderHighlight(this.id);
-        this.highlighted = true;
-    }
-    return {color, id, piece, highlight}
+    return {color, id, piece}
 }
 
 function SquareRow(rowID){
