@@ -217,6 +217,59 @@ function GenerateQueenMoves(squareid, color){
     })
 }
 
+function GenereateKnightMoves(squareid, color){
+    clearHighlight()
+    PossibleMoves.length = 0;
+
+    const enemyColor = color === "White"? "Black": "White";
+    
+    const directions = [
+        [2,1],
+        [2,-1],
+        [-2,1],
+        [-2, -1],
+        [1,2],
+        [-1,2],
+        [-1,-2],
+        [1,-2]
+    ]
+
+    for(const[fileDirection, rankDirection] of directions){
+        let file = squareid[0].charCodeAt(0)
+        let rank = Number(squareid[1])
+
+        file += fileDirection;
+        rank += rankDirection;
+
+        if(file < "a".charCodeAt(0) || file > "h".charCodeAt(0) || rank < 1 || rank > 8){
+            continue;
+        }
+
+        const targetSquare = `${String.fromCharCode(file)}${rank}`;
+        const piece = whichPieceExist(targetSquare);
+
+        if(piece == null){
+            PossibleMoves.push({
+                id: targetSquare,
+                type: "move"
+            })
+            continue;
+        }
+
+        if (piece.color === enemyColor){
+            PossibleMoves.push({
+                id: targetSquare,
+                type: "capture"
+            })
+        }
+    }
+
+    PossibleMoves.forEach(el => {
+        renderHighlight(el.id, el.type)
+    })
+    
+}
+
 function GlobalEvent(){
 
     RootDiv.addEventListener("click", function(event){
@@ -301,6 +354,12 @@ function GlobalEvent(){
             }
             else if(clickedPiece.piece_name === "BlackQueen"){
                 GenerateQueenMoves(ClickedON, "Black")
+            }
+            else if(clickedPiece.piece_name === "WhiteKnight"){
+                GenereateKnightMoves(ClickedON, "White")
+            }
+            else if(clickedPiece.piece_name === "BlackKnight"){
+                GenereateKnightMoves(ClickedON, "Black")
             }
         }
         

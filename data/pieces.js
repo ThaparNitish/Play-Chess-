@@ -21,7 +21,7 @@ function BlackRook(curr_position){
 }
 
 function Blackknight(curr_position){
-  return{curr_position, img: "../images/pieces/black/knight.png", piece_name: "Blackknight", color : "Black"}
+  return{curr_position, img: "../images/pieces/black/knight.png", piece_name: "BlackKnight", color : "Black"}
 }
 
 // White Pieces
