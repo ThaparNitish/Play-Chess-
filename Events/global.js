@@ -1,10 +1,12 @@
 import { RootDiv, globalState } from "../Helper/constants.js";
-import { renderHighlight, clearHighlight, moveElement, MakeSquareYellow, removeYellowSquare } from "../Render/main.js";
+import { renderHighlight, clearHighlight, moveElement, MakeSquareYellow, removeYellowSquare, RenderPossibleMoves } from "../Render/main.js";
 import {getSquare, whichPieceExist, switchTurn } from "../Helper/commonHelper.js";
+import {updateKingSquare, findKingSquare} from "../Helper/King.js"
 import {recordMove } from "../Helper/moveHistory.js";
+import { isSquareUnderAttack, filterLegalMoves } from "../Helper/legalMoves.js";
 
 
-const PossibleMoves = []
+let PossibleMoves = []
 let CurrentTurn = "White"
 let CurrentHighlighted = null;
 let SelectedPiece = null;
@@ -51,9 +53,7 @@ function GeneratePawnMoves(squareid, color){
         }
     });
 
-    PossibleMoves.forEach(el => {
-        renderHighlight(el.id, el.type);
-    });
+    PossibleMoves = filterLegalMoves(squareid, PossibleMoves, color)
 }
 
 function GenerateBishopMoves(squareid, color){
@@ -77,7 +77,7 @@ function GenerateBishopMoves(squareid, color){
             rank += rankDirection
         
             // boundary
-            if (file < "a".charCodeAt(0) || file > "h".charCodeAt(0) || rank <= 1 || rank >= 8){
+            if (file < "a".charCodeAt(0) || file > "h".charCodeAt(0) || rank < 1 || rank > 8){
                 break;
             }
 
@@ -104,11 +104,7 @@ function GenerateBishopMoves(squareid, color){
             break;
         }
     }
-
-    // render Moves
-    PossibleMoves.forEach(el => {
-        renderHighlight(el.id, el.type)
-    })
+    PossibleMoves = filterLegalMoves(squareid, PossibleMoves, color)
 }
 
 function GenerateRookMoves(squareid, color){
@@ -156,10 +152,7 @@ function GenerateRookMoves(squareid, color){
             break;
         }
     }
-
-    PossibleMoves.forEach(el => {
-        renderHighlight(el.id, el.type)
-    })
+    PossibleMoves = filterLegalMoves(squareid, PossibleMoves, color)
 }
 
 function GenerateQueenMoves(squareid, color){
@@ -192,7 +185,6 @@ function GenerateQueenMoves(squareid, color){
 
             const targetSquare = `${String.fromCharCode(file)}${rank}`;
             const piece = whichPieceExist(targetSquare);
-            console.log(targetSquare)
 
             if(piece == null){
                 PossibleMoves.push({
@@ -211,10 +203,7 @@ function GenerateQueenMoves(squareid, color){
             break;
         }    
     }
-
-    PossibleMoves.forEach(el => {
-        renderHighlight(el.id, el.type)
-    })
+    PossibleMoves = filterLegalMoves(squareid, PossibleMoves, color)
 }
 
 function GenereateKnightMoves(squareid, color){
@@ -263,11 +252,60 @@ function GenereateKnightMoves(squareid, color){
             })
         }
     }
+    PossibleMoves = filterLegalMoves(squareid, PossibleMoves, color)
+}
 
-    PossibleMoves.forEach(el => {
-        renderHighlight(el.id, el.type)
-    })
+function GenerateKingMoves(squareid, color){
+
+    clearHighlight()
+    PossibleMoves.length = 0;
+
+    const enemyColor = color === "White"? "Black": "White";
+
+    const directions = [
+        [1,0],
+        [0,1],
+        [-1,0],
+        [0,-1],
+        [1,1],
+        [1,-1],
+        [-1,-1],
+        [-1,1]
+    ]
     
+    for(const[fileDirection, rankDirection] of directions){
+        let file = squareid[0].charCodeAt(0)
+        let rank = Number(squareid[1])
+
+        file += fileDirection;
+        rank += rankDirection;
+
+        if(file < "a".charCodeAt(0) || file > "h".charCodeAt(0) || rank < 1 || rank > 8){
+            continue;
+        }
+
+        const targetSquare = `${String.fromCharCode(file)}${rank}`;
+        if(isSquareUnderAttack(targetSquare, enemyColor)){
+            continue;
+        }
+        const piece = whichPieceExist(targetSquare);
+
+        if(piece == null){
+            PossibleMoves.push({
+                id: targetSquare,
+                type: "move"
+            })
+            continue;
+        }
+
+        if (piece.color === enemyColor){
+            PossibleMoves.push({
+                id: targetSquare,
+                type: "capture"
+            })
+        }
+    }
+    PossibleMoves = filterLegalMoves(squareid, PossibleMoves, color)
 }
 
 function GlobalEvent(){
@@ -278,7 +316,7 @@ function GlobalEvent(){
         const ClickedON = event.target.closest(".square")?.id;
         if(!ClickedON) return; // just to avoid any exceptions
 
-        const clickedPiece = whichPieceExist(ClickedON); // can be null or a piece
+        const clickedPiece = whichPieceExist(ClickedON); // can be null or a piece object
 
         // if a piece is already selected check if the clicked square is one of the possible moves: call moveElement
 
@@ -289,6 +327,9 @@ function GlobalEvent(){
         if(CurrentHighlighted && move){
             recordMove(SelectedPiece, CurrentHighlighted, ClickedON, clickedPiece)
             moveElement(CurrentHighlighted, ClickedON);
+            if(SelectedPiece.includes("King")){
+                updateKingSquare(CurrentTurn, ClickedON)
+            }
             CurrentTurn = switchTurn(CurrentTurn)
 
             clearHighlight();
@@ -325,41 +366,59 @@ function GlobalEvent(){
             }
             // make the current piece selected
             CurrentHighlighted = ClickedON;
-            SelectedPiece = clickedPiece;
+            SelectedPiece = clickedPiece.piece_name;
             MakeSquareYellow(ClickedON);
             PossibleMoves.length = 0;
 
             // white pawn logic
             if(clickedPiece.piece_name === "WhitePawn"){
                 GeneratePawnMoves(ClickedON, "White");
+                RenderPossibleMoves(PossibleMoves)
             }
             else if(clickedPiece.piece_name === "BlackPawn"){
                 GeneratePawnMoves(ClickedON, "Black")
+                RenderPossibleMoves(PossibleMoves)
             }
             else if(clickedPiece.piece_name === "WhiteBishop"){
                 GenerateBishopMoves(ClickedON, "White");
+                RenderPossibleMoves(PossibleMoves)
             }
             else if(clickedPiece.piece_name === "BlackBishop"){
                 GenerateBishopMoves(ClickedON, "Black");
+                RenderPossibleMoves(PossibleMoves)
             }
             else if (clickedPiece.piece_name === "WhiteRook"){
                 GenerateRookMoves(ClickedON, "White")
+                RenderPossibleMoves(PossibleMoves)
             }
             else if (clickedPiece.piece_name === "BlackRook"){
                 GenerateRookMoves(ClickedON, "Black")
+                RenderPossibleMoves(PossibleMoves)
             }
             else if (clickedPiece.piece_name === "WhiteQueen"){
                 console.log(true)
                 GenerateQueenMoves(ClickedON, "White")
+                RenderPossibleMoves(PossibleMoves)
             }
             else if(clickedPiece.piece_name === "BlackQueen"){
                 GenerateQueenMoves(ClickedON, "Black")
+                RenderPossibleMoves(PossibleMoves)
             }
             else if(clickedPiece.piece_name === "WhiteKnight"){
                 GenereateKnightMoves(ClickedON, "White")
+                RenderPossibleMoves(PossibleMoves)
             }
             else if(clickedPiece.piece_name === "BlackKnight"){
                 GenereateKnightMoves(ClickedON, "Black")
+                RenderPossibleMoves(PossibleMoves)
+            }
+            else if(clickedPiece.piece_name === "WhiteKing"){
+                GenerateKingMoves(ClickedON, "White")
+                RenderPossibleMoves(PossibleMoves)
+            }
+            else if(clickedPiece.piece_name === "BlackKing"){
+                GenerateKingMoves(ClickedON, "Black")
+                RenderPossibleMoves(PossibleMoves)
             }
         }
         

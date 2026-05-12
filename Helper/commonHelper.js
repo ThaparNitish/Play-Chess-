@@ -23,5 +23,5 @@ function switchTurn(Curr_Turn){
     return Curr_Turn === "White" ? "Black" : "White";
 }
 
- 
+
 export {getSquare, whichPieceExist, switchTurn}

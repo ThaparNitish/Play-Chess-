@@ -133,5 +133,10 @@ function clearHighlight(){
     })
 }
 
+function RenderPossibleMoves(PossibleMoves){
+    PossibleMoves.forEach(el => {
+        renderHighlight(el.id, el.type)
+    })
+}
 
-export{initGameRender, renderHighlight, clearHighlight, MakeSquareYellow, removeYellowSquare, moveElement}
+export{initGameRender, renderHighlight, clearHighlight, MakeSquareYellow, removeYellowSquare, moveElement, RenderPossibleMoves}
